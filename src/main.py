@@ -1,24 +1,37 @@
 # Inicialização do Pygame
+import io
 import random
 import time
+from gtts import gTTS
 import pygame
 import os
 from classes.reproduzir import GravadorAudio
-import pyttsx3
 
 def texto_para_audio(texto):
-    engine = pyttsx3.init()
+    try:
+        # Convertendo texto em fala com Google Text-to-Speech (gTTS)
+        tts = gTTS(text=texto, lang='pt')
+        
+        # Usando um buffer de memória (sem salvar o arquivo)
+        fp = io.BytesIO()
+        tts.save(fp)
+        fp.seek(0)
 
-    engine.setProperty('rate', 150)  
+        # Inicializando o mixer do pygame
+        pygame.mixer.init()
+        
+        # Carregando o áudio e tocando
+        pygame.mixer.music.load(fp)
+        pygame.mixer.music.play()
 
-    engine.setProperty('voice', 'pt-br') 
-
-    engine.say(texto)
-
-    engine.runAndWait()
+        # Aguarda até que a música termine para o programa não fechar imediatamente
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
     
-GravadorAudio
-
+    except Exception as e:
+        print(f"Erro ao usar gTTS: {e}")
+        
+        
 pygame.init()
 
 # Configurações
@@ -31,22 +44,22 @@ pygame.display.set_caption("Meu Jogo Pygame")
 
 # Carregando imagens
 caminho_imagens = os.path.join("assets", "img")
-steve_imagem = pygame.image.load(os.path.join(caminho_imagens, "steve.png"))
-steve_imagem_phone = pygame.image.load(os.path.join(caminho_imagens, "steve_phone.png"))
-fundo_imagem = pygame.image.load(os.path.join(caminho_imagens, "sala.jpeg"))
-phone_image_front = pygame.image.load(os.path.join(caminho_imagens, "phone-front.png"))
-icon_green_image = pygame.image.load(os.path.join(caminho_imagens, "icon_green.png"))
-boca_aberta_imagem = pygame.image.load(os.path.join(caminho_imagens, "boca_aberta.png"))
+steve_imagem = pygame.image.load(r'talkingCraft\assets\img\steve.png')
+steve_imagem_phone = pygame.image.load(r'talkingCraft\assets\img\steve_phone.png')
+fundo_imagem = pygame.image.load(r'talkingCraft\assets\img\sala.jpeg')
+phone_image_front = pygame.image.load(r'talkingCraft\assets\img\phone-front.png')
+icon_green_image = pygame.image.load(r'talkingCraft\assets\img\icon_green.png')
+boca_aberta_imagem = pygame.image.load(r'talkingCraft\assets\img\boca_aberta.png')
 
 # Carregando música de fundo e audios
-pygame.mixer.music.load(os.path.join("assets", "audio", "musica_fundo.mp3"))
+pygame.mixer.music.load(r'talkingCraft\assets\audio\musica_fundo.mp3')
 pygame.mixer.music.play(-1)  # -1 para loop infinito
 pygame.mixer.music.set_volume(0.05)  # Configurando o volume da música para 50%
 
-steve_speak = pygame.mixer.Sound(os.path.join("assets", "audio", "song_steve.mp3"))
-chamada_phone = pygame.mixer.Sound(os.path.join("assets", "audio", "chamada.mp3"))
-ligacao = pygame.mixer.Sound(os.path.join("assets", "audio", "ligacao.mp3"))
-encerramento = pygame.mixer.Sound(os.path.join("assets", "audio", "encerrando.mp3"))
+steve_speak = pygame.mixer.Sound(r'talkingCraft\assets\audio\song_steve.mp3')
+chamada_phone = pygame.mixer.Sound(r'talkingCraft\assets\audio\chamada.mp3')
+ligacao = pygame.mixer.Sound(r'talkingCraft\assets\audio\ligacao.mp3')
+encerramento = pygame.mixer.Sound(r'talkingCraft\assets\audio\encerrando.mp3')
 # Variáveis de controle
 atendendo = False
 gravador = None  # Inicialização do gravador de áudio
@@ -86,9 +99,11 @@ while rodando:
     else:
         if gravador is not None:
             steve_speak.play()
-            time.sleep(1)
+            # gravador.reproduzir() repetir fala do audio gravado
             gravador.encerrar()
+
             gravador = None
+
             pygame.mixer.music.set_volume(0.05)
 
         tela.blit(steve_imagem, steve_pos)
@@ -105,7 +120,7 @@ while rodando:
             if evento.button == 1:  # Verifica se o botão pressionado é o botão esquerdo do mouse
                 if icon_green_rect.collidepoint(evento.pos):
 
-                    if random.choice([False, False]):
+                    if random.choice([True, False]):
                         ligacao.play()
 
                         time.sleep(5)
